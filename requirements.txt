@@ -1,0 +1,25 @@
+# llm
+litellm
+langfuse>=2.0.0
+diskcache
+
+# util
+python-dotenv
+
+# dev
+ruff
+mypy
+pydantic
+
+# visualization
+matplotlib
+seaborn
+
+# wearables api
+garminconnect
+
+# jupyter
+jupyter
+nbformat
+nbconvert
+ipykernel
