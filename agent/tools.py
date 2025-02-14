@@ -1,0 +1,196 @@
+import logging
+
+from nbformat import NotebookNode
+from pydantic import BaseModel
+from sandbox.notebook_sandbox import CellType, JupyterSandbox
+from typing import ClassVar, Tuple
+from utils.parsing import (
+    extract_block_from_tags,
+    extract_blocks_from_tags,
+    try_to_parse_as_int,
+)
+
+logger = logging.getLogger(__name__)
+
+
+class AddCellAction(BaseModel):
+    name: ClassVar[str] = "add_cell"
+    type: ClassVar[str] = "type"
+    idx: ClassVar[str] = "idx"
+    content: ClassVar[str] = "content"
+
+    @staticmethod
+    def get_response_template() -> str:
+        return f"""
+<{AddCellAction.name}>
+<{AddCellAction.type}>Cell type i.e. either `code` or `markdown`. Type: enum</{AddCellAction.type}>
+<{AddCellAction.idx}>Cell index i.e. the index of the cell to add to. Type: int</{AddCellAction.idx}>
+<{AddCellAction.content}>
+Cell content i.e. the content of the cell to add. Type: str
+</{AddCellAction.content}>
+</{AddCellAction.name}>
+"""
+
+    @staticmethod
+    def handle_add_action(
+        response: str, sandbox: JupyterSandbox, notebook: NotebookNode
+    ) -> NotebookNode:
+        add_entries = extract_blocks_from_tags(response, AddCellAction.name)
+        for add_entry in add_entries:
+            add_type = extract_block_from_tags(add_entry, AddCellAction.type)
+            add_content = extract_block_from_tags(add_entry, AddCellAction.content)
+            add_idx_str = extract_block_from_tags(add_entry, AddCellAction.idx)
+            add_idx = try_to_parse_as_int(add_idx_str)
+            if not add_type or not add_content or add_idx is None:
+                continue
+            notebook = sandbox.add_cell(
+                notebook, add_content, cell_type=CellType(add_type), idx=add_idx
+            )
+        return notebook
+
+
+class ModifyCellAction(BaseModel):
+    name: ClassVar[str] = "modify_cell"
+    type: ClassVar[str] = "type"
+    idx: ClassVar[str] = "idx"
+    content: ClassVar[str] = "content"
+
+    @staticmethod
+    def get_response_template() -> str:
+        return f"""
+<{ModifyCellAction.name}>
+<{ModifyCellAction.type}>Cell type i.e. either `code` or `markdown`. Type: enum</{ModifyCellAction.type}>
+<{ModifyCellAction.idx}>Cell index i.e. the index of the cell to modify. Type: int</{ModifyCellAction.idx}>
+<{ModifyCellAction.content}>
+Cell content i.e. the content of the cell to modify. Type: str
+</{ModifyCellAction.content}>
+</{ModifyCellAction.name}>
+"""
+
+    @staticmethod
+    def handle_modify_action(
+        response: str, sandbox: JupyterSandbox, notebook: NotebookNode
+    ) -> NotebookNode:
+        modify_entries = extract_blocks_from_tags(response, ModifyCellAction.name)
+        for modify_entry in modify_entries:
+            modify_idx_str = extract_block_from_tags(modify_entry, ModifyCellAction.idx)
+            modify_idx = try_to_parse_as_int(modify_idx_str)
+            modify_content = extract_block_from_tags(
+                modify_entry, ModifyCellAction.content
+            )
+            if modify_idx is None or not modify_content:
+                continue
+            notebook = sandbox.modify_cell(notebook, modify_idx, modify_content)
+        return notebook
+
+
+class DeleteCellAction(BaseModel):
+    name: ClassVar[str] = "delete_cell"
+    idx: ClassVar[str] = "idx"
+
+    @staticmethod
+    def get_response_template() -> str:
+        return f"""
+<{DeleteCellAction.name}>
+<{DeleteCellAction.idx}>Cell index i.e. the index of the cell to delete. Type: int</{DeleteCellAction.idx}>
+</{DeleteCellAction.name}>
+"""
+
+    @staticmethod
+    def handle_delete_action(
+        response: str, sandbox: JupyterSandbox, notebook: NotebookNode
+    ) -> NotebookNode:
+        delete_entries = extract_blocks_from_tags(response, DeleteCellAction.name)
+        for delete_entry in delete_entries:
+            delete_idx_str = extract_block_from_tags(delete_entry, DeleteCellAction.idx)
+            delete_idx = try_to_parse_as_int(delete_idx_str)
+            if delete_idx is None:
+                continue
+            notebook = sandbox.delete_cell(notebook, delete_idx)
+        return notebook
+
+
+class StopAction(BaseModel):
+    name: ClassVar[str] = "stop"
+
+    @staticmethod
+    def get_response_template() -> str:
+        return f"""
+<{StopAction.name}>
+</{StopAction.name}>
+"""
+
+    @staticmethod
+    def handle_stop_action(response: str) -> bool:
+        stop_entries = extract_blocks_from_tags(response, StopAction.name)
+        if stop_entries:
+            return True
+        return False
+
+
+class JupyterCodeExecutionAction:
+    @staticmethod
+    def get_actions_response_template() -> str:
+        return f"""
+Possible actions:
+1. Add a cell
+{AddCellAction.get_response_template()}
+2. Modify a cell
+{ModifyCellAction.get_response_template()}
+3. Delete a cell
+{DeleteCellAction.get_response_template()}
+4. Stop
+{StopAction.get_response_template()}
+"""
+
+    @staticmethod
+    def response_to_actions(
+        response: str, sandbox: JupyterSandbox, notebook: NotebookNode
+    ) -> Tuple[NotebookNode, bool]:
+        print()
+        notebook = AddCellAction.handle_add_action(response, sandbox, notebook)
+        notebook = ModifyCellAction.handle_modify_action(response, sandbox, notebook)
+        notebook = DeleteCellAction.handle_delete_action(response, sandbox, notebook)
+        should_stop = StopAction.handle_stop_action(response)
+        return notebook, should_stop
+
+
+if __name__ == "__main__":
+    sandbox = JupyterSandbox()
+    # test jupyter code execution tool
+    notebook = sandbox.create_notebook()
+    actions = """
+<add_cell>
+<type>code</type>
+<content>
+print("Hello, world!")
+</content>
+<idx>0</idx>
+</add_cell>
+<add_cell>
+<type>code</type>
+<content>
+print("Hello, world! 2!")
+</content>
+<idx>  -1</idx>
+</add_cell>
+<modify_cell>
+<type> code</type>
+<idx>0</idx>
+<content>
+print("Hello, world! 3!")
+</content>
+</modify_cell>
+<delete_cell>
+<idx>1</idx>
+</delete_cell>
+<stop></stop>
+"""
+
+    notebook, should_stop = JupyterCodeExecutionAction.response_to_actions(
+        actions, sandbox, notebook
+    )
+    import json
+
+    print(json.dumps(sandbox.get_state(notebook), indent=4))
+    print(should_stop)
