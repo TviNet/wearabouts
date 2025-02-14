@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
-from typing import List, Literal, TypeAlias, TypedDict, Union
+from typing import Any, Dict, List, Literal, Tuple, TypeAlias, TypedDict, Union
 
 
 # models enum
@@ -38,3 +38,42 @@ class LlmProviderConfig(BaseModel):
 class LlmParameterConfig(BaseModel):
     temperature: float = 0.1
     max_tokens: int = 4096
+
+
+class CellOutputTypes(Enum):
+    STREAM = "stream"
+    ERROR = "error"
+    DISPLAY_DATA = "display_data"
+    EXECUTE_RESULT = "execute_result"
+    OTHER = "other"
+
+
+class ContentType(Enum):
+    TEXT = "text"
+    IMAGE = "image"
+
+
+class StreamOutput(TypedDict):
+    output_type: str
+    name: str
+    text: str
+
+
+class ErrorOutput(TypedDict):
+    output_type: str
+    ename: str
+    evalue: str
+    traceback: List[str]
+
+
+class DisplayDataOutput(TypedDict):
+    output_type: str
+    data: Dict[str, Any]
+
+
+class ExecuteResultOutput(TypedDict):
+    output_type: str
+    data: Dict[str, Any]
+
+
+StateItem: TypeAlias = Tuple[str, str]

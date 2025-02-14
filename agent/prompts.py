@@ -1,5 +1,5 @@
 from agent.models import LlmMessage, LlmMessageContentItem, TextItem
-from agent.tools import JupyterCodeExecutionAction
+from agent.tools import JupyterCodeActionParser
 from pydantic import BaseModel
 from typing import List
 
@@ -7,10 +7,10 @@ from typing import List
 class JupyterCodeAgentPrompt(BaseModel):
     SYSTEM_PROMPT: str = f"""
 You are a data analysis agent.
-Given the state of the notebook, and the question, provide the next action to take.
+Given the state of the jupyter notebook, and the task, complete the task.
 
 The following is the format of the actions you can take:
-{JupyterCodeExecutionAction.get_actions_response_template()}
+{JupyterCodeActionParser.get_actions_response_template()}
 """
     NOTEBOOK_STATE_PREAMBLE: str = """
 The following is the current state of the notebook:

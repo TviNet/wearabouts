@@ -1,9 +1,10 @@
 import logging
 
+from agent.models import CellOutputTypes, ContentType, StateItem
 from nbformat import NotebookNode
 from pydantic import BaseModel
 from sandbox.notebook_sandbox import CellType, JupyterSandbox
-from typing import ClassVar, Tuple
+from typing import Any, ClassVar, Dict, List, Tuple
 from utils.parsing import (
     extract_block_from_tags,
     extract_blocks_from_tags,
@@ -128,7 +129,7 @@ class StopAction(BaseModel):
         return False
 
 
-class JupyterCodeExecutionAction:
+class JupyterCodeActionParser:
     @staticmethod
     def get_actions_response_template() -> str:
         return f"""
@@ -153,6 +154,50 @@ Possible actions:
         notebook = DeleteCellAction.handle_delete_action(response, sandbox, notebook)
         should_stop = StopAction.handle_stop_action(response)
         return notebook, should_stop
+
+
+class JupyterCodeParser:
+    @staticmethod
+    def convert_output_to_string(output: Dict[str, Any]) -> StateItem:
+        if output.get("output_type", "") == CellOutputTypes.STREAM.value:
+            return ContentType.TEXT.value, output.get("text", "")
+        elif output.get("output_type", "") == CellOutputTypes.ERROR.value:
+            return (
+                ContentType.TEXT.value,
+                f"""
+{output.get('ename')}: {output.get('evalue')}
+{output.get('traceback')}
+""",
+            )
+        elif output.get("output_type", "") == CellOutputTypes.DISPLAY_DATA.value:
+            if output.get("data", {}).get("image/png", None):
+                image_data = output.get("data", {}).get("image/png", None)
+                return ContentType.IMAGE.value, f"data:image/png;base64,{image_data}"
+        return ContentType.TEXT.value, ""
+
+    @staticmethod
+    def convert_notebook_to_state(
+        notebook: NotebookNode, include_outputs=True
+    ) -> List[StateItem]:
+        state: List[StateItem] = []
+        for _, cell in enumerate(notebook.cells):
+            content = cell.source
+            if CellType(cell.cell_type) == CellType.MARKDOWN:
+                state.append((ContentType.TEXT.value, content))
+
+            elif CellType(cell.cell_type) == CellType.CODE:
+                state.append((ContentType.TEXT.value, content))
+                if include_outputs:
+                    outputs = cell.outputs if hasattr(cell, "outputs") else []
+                    output_repr = [
+                        JupyterCodeParser.convert_output_to_string(output)
+                        for output in outputs
+                    ]
+                    state += output_repr
+            else:
+                logger.error(f"Invalid cell type: {cell.cell_type}")
+
+        return state
 
 
 if __name__ == "__main__":
@@ -187,10 +232,10 @@ print("Hello, world! 3!")
 <stop></stop>
 """
 
-    notebook, should_stop = JupyterCodeExecutionAction.response_to_actions(
+    notebook, should_stop = JupyterCodeActionParser.response_to_actions(
         actions, sandbox, notebook
     )
     import json
 
-    print(json.dumps(sandbox.get_state(notebook), indent=4))
+    print(json.dumps(JupyterCodeParser.convert_notebook_to_state(notebook), indent=4))
     print(should_stop)

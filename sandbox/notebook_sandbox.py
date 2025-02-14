@@ -4,7 +4,7 @@ import nbformat
 from enum import Enum
 from nbconvert.preprocessors import ExecutePreprocessor
 from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
-from typing import Any, Dict, List, Tuple, TypeAlias, TypedDict
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -16,65 +16,6 @@ class CellType(Enum):
     @classmethod
     def _missing_(cls, value):
         return cls.CODE
-
-
-class CellOutputTypes(Enum):
-    STREAM = "stream"
-    ERROR = "error"
-    DISPLAY_DATA = "display_data"
-    EXECUTE_RESULT = "execute_result"
-    OTHER = "other"
-
-
-class ContentType(Enum):
-    TEXT = "text"
-    IMAGE = "image"
-
-
-class StreamOutput(TypedDict):
-    output_type: str
-    name: str
-    text: str
-
-
-class ErrorOutput(TypedDict):
-    output_type: str
-    ename: str
-    evalue: str
-    traceback: List[str]
-
-
-class DisplayDataOutput(TypedDict):
-    output_type: str
-    data: Dict[str, Any]
-
-
-class ExecuteResultOutput(TypedDict):
-    output_type: str
-    data: Dict[str, Any]
-
-
-StateItem: TypeAlias = Tuple[str, str]
-
-
-class CellOutputParser:
-    @staticmethod
-    def convert_output_to_string(output: Dict[str, Any]) -> StateItem:
-        if output.get("output_type", "") == CellOutputTypes.STREAM.value:
-            return ContentType.TEXT.value, output.get("text", "")
-        elif output.get("output_type", "") == CellOutputTypes.ERROR.value:
-            return (
-                ContentType.TEXT.value,
-                f"""
-{output.get('ename')}: {output.get('evalue')}
-{output.get('traceback')}
-""",
-            )
-        elif output.get("output_type", "") == CellOutputTypes.DISPLAY_DATA.value:
-            if output.get("data", {}).get("image/png", None):
-                image_data = output.get("data", {}).get("image/png", None)
-                return ContentType.IMAGE.value, f"data:image/png;base64,{image_data}"
-        return ContentType.TEXT.value, ""
 
 
 class JupyterSandbox:
@@ -89,29 +30,6 @@ class JupyterSandbox:
     def create_notebook(self) -> nbformat.NotebookNode:
         """Create a new empty notebook"""
         return new_notebook()
-
-    def get_state(
-        self, notebook: nbformat.NotebookNode, include_outputs: bool = True
-    ) -> List[StateItem]:
-        state: List[StateItem] = []
-        for idx, cell in enumerate(notebook.cells):
-            content = cell.source
-            if CellType(cell.cell_type) == CellType.MARKDOWN:
-                state.append((ContentType.TEXT.value, content))
-
-            elif CellType(cell.cell_type) == CellType.CODE:
-                state.append((ContentType.TEXT.value, content))
-                if include_outputs:
-                    outputs = cell.outputs if hasattr(cell, "outputs") else []
-                    output_repr = [
-                        CellOutputParser.convert_output_to_string(output)
-                        for output in outputs
-                    ]
-                    state += output_repr
-            else:
-                logger.error(f"Invalid cell type: {cell.cell_type}")
-
-        return state
 
     def add_cell(
         self,
@@ -248,8 +166,7 @@ plt.show()
     executed_nb = sandbox.execute_notebook(nb)
     import json
 
-    # print(json.dumps(executed_nb, indent=4))
-    print(json.dumps(sandbox.get_state(executed_nb), indent=4))
+    print(json.dumps(executed_nb, indent=4))
 
     # Save the executed notebook
     sandbox.save_notebook(executed_nb, "test_notebook.ipynb")
