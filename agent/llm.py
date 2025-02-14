@@ -40,6 +40,11 @@ if __name__ == "__main__":
     llm_client = get_llm_client()
     print(
         llm_client.get_single_answer(
-            [LlmMessage(role="user", content="Hello, how are you?")]
+            [
+                LlmMessage(
+                    role="user",
+                    content=[{"type": "text", "text": "Hello, how are you?"}],
+                )
+            ]
         )
     )
