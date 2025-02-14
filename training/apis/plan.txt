@@ -1,0 +1,15 @@
+Step 1:
+    Prompt:
+        convert this codebase into xml formatted function definitions containing useful info
+
+        example
+
+        func1 (a: int, b:str) -> c
+        # concatenates string versions of a and b and returns c
+
+        [Input]: garminconnect.py
+    Model:
+        Claude 3.5 Sonnet. claude.ai
+
+Step 2:
+    Wrap in class tag

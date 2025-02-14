@@ -1,0 +1,206 @@
+<class>
+    <name>GarminConnect</name>
+    <description>Garmin Connect API wrapper</description>
+
+    <function>
+        <name>get_full_name</name>
+        <params></params>
+        <returns type="str">User's full name</returns>
+        <description>Returns the authenticated user's full name from their profile</description>
+    </function>
+
+    <function>
+        <name>get_unit_system</name>
+        <params></params>
+        <returns type="str">User's preferred unit system</returns>
+        <description>Returns the user's configured measurement system preference</description>
+    </function>
+
+    <function>
+        <name>get_stats</name>
+        <params>
+            <param name="cdate" type="str">Date in YYYY-MM-DD format</param>
+        </params>
+        <returns type="Dict[str, Any]">Activity summary data</returns>
+        <description>Returns user activity summary for specified date (compatibility wrapper for get_user_summary)</description>
+    </function>
+
+    <function>
+        <name>get_user_summary</name>
+        <params>
+            <param name="cdate" type="str">Date in YYYY-MM-DD format</param>
+        </params>
+        <returns type="Dict[str, Any]">Activity summary data</returns>
+        <description>Returns detailed user activity summary for specified date</description>
+    </function>
+
+    <function>
+        <name>get_steps_data</name>
+        <params>
+            <param name="cdate" type="str">Date in YYYY-MM-DD format</param>
+        </params>
+        <returns type="Dict[str, Any]">Steps data</returns>
+        <description>Returns step count data for specified date</description>
+    </function>
+
+    <function>
+        <name>get_heart_rates</name>
+        <params>
+            <param name="cdate" type="str">Date in YYYY-MM-DD format</param>
+        </params>
+        <returns type="Dict[str, Any]">Heart rate data</returns>
+        <description>Returns heart rate data for specified date</description>
+    </function>
+
+    <function>
+        <name>get_body_composition</name>
+        <params>
+            <param name="startdate" type="str">Start date in YYYY-MM-DD format</param>
+            <param name="enddate" type="Optional[str]">Optional end date in YYYY-MM-DD format</param>
+        </params>
+        <returns type="Dict[str, Any]">Body composition metrics</returns>
+        <description>Returns body composition data for date range (single day if no enddate)</description>
+    </function>
+
+    <function>
+        <name>add_body_composition</name>
+        <params>
+            <param name="timestamp" type="Optional[str]">Timestamp for measurement</param>
+            <param name="weight" type="float">Weight value</param>
+            <param name="percent_fat" type="Optional[float]">Body fat percentage</param>
+            <param name="percent_hydration" type="Optional[float]">Hydration percentage</param>
+            <param name="visceral_fat_mass" type="Optional[float]">Visceral fat mass</param>
+            <param name="bone_mass" type="Optional[float]">Bone mass</param>
+            <param name="muscle_mass" type="Optional[float]">Muscle mass</param>
+            <param name="basal_met" type="Optional[float]">Basal metabolic rate</param>
+            <param name="active_met" type="Optional[float]">Active metabolic rate</param>
+            <param name="physique_rating" type="Optional[float]">Physique rating</param>
+            <param name="metabolic_age" type="Optional[float]">Metabolic age</param>
+            <param name="visceral_fat_rating" type="Optional[float]">Visceral fat rating</param>
+            <param name="bmi" type="Optional[float]">Body Mass Index</param>
+        </params>
+        <returns type="Dict">Response from Garmin API</returns>
+        <description>Uploads body composition measurement data to Garmin Connect</description>
+    </function>
+
+    <function>
+        <name>get_sleep_data</name>
+        <params>
+            <param name="cdate" type="str">Date in YYYY-MM-DD format</param>
+        </params>
+        <returns type="Dict[str, Any]">Sleep metrics and stages</returns>
+        <description>Returns detailed sleep data for specified date</description>
+    </function>
+
+    <function>
+        <name>get_activities</name>
+        <params>
+            <param name="start" type="int">Starting index (default 0)</param>
+            <param name="limit" type="int">Number of activities to return (default 20)</param>
+        </params>
+        <returns type="List[Dict[str, Any]]">List of activity summaries</returns>
+        <description>Returns list of activities with basic data, most recent first</description>
+    </function>
+
+    <function>
+        <name>get_activity_details</name>
+        <params>
+            <param name="activity_id" type="str">Activity identifier</param>
+            <param name="maxchart" type="int">Max chart size (default 2000)</param>
+            <param name="maxpoly" type="int">Max polyline size (default 4000)</param>
+        </params>
+        <returns type="Dict[str, Any]">Detailed activity data</returns>
+        <description>Returns comprehensive data for a specific activity including GPS tracks, heart rate, etc</description>
+    </function>
+
+    <function>
+        <name>upload_activity</name>
+        <params>
+            <param name="activity_path" type="str">Path to activity file</param>
+        </params>
+        <returns type="Dict">Upload response</returns>
+        <description>Uploads an activity file (FIT, GPX, or TCX format) to Garmin Connect</description>
+    </function>
+
+    <function>
+        <name>get_device_settings</name>
+        <params>
+            <param name="device_id" type="str">Device identifier</param>
+        </params>
+        <returns type="Dict[str, Any]">Device settings</returns>
+        <description>Returns settings and configuration for specified device</description>
+    </function>
+
+    <function>
+        <name>get_gear</name>
+        <params>
+            <param name="userProfileNumber" type="str">User profile identifier</param>
+        </params>
+        <returns type="Dict">Gear data</returns>
+        <description>Returns list of user's registered gear (shoes, bikes, etc)</description>
+    </function>
+
+    <function>
+        <name>get_body_battery</name>
+        <params>
+            <param name="startdate" type="str">Start date in YYYY-MM-DD format</param>
+            <param name="enddate" type="Optional[str]">Optional end date in YYYY-MM-DD format</param>
+        </params>
+        <returns type="List[Dict[str, Any]]">Body Battery metrics</returns>
+        <description>Returns Body Battery (energy level) data for date range</description>
+    </function>
+
+    <function>
+        <name>get_stress_data</name>
+        <params>
+            <param name="cdate" type="str">Date in YYYY-MM-DD format</param>
+        </params>
+        <returns type="Dict[str, Any]">Stress metrics</returns>
+        <description>Returns stress level data for specified date</description>
+    </function>
+
+    <function>
+        <name>get_hydration_data</name>
+        <params>
+            <param name="cdate" type="str">Date in YYYY-MM-DD format</param>
+        </params>
+        <returns type="Dict[str, Any]">Hydration data</returns>
+        <description>Returns hydration tracking data for specified date</description>
+    </function>
+
+    <function>
+        <name>get_blood_pressure</name>
+        <params>
+            <param name="startdate" type="str">Start date in YYYY-MM-DD format</param>
+            <param name="enddate" type="Optional[str]">Optional end date in YYYY-MM-DD format</param>
+        </params>
+        <returns type="Dict[str, Any]">Blood pressure readings</returns>
+        <description>Returns blood pressure measurements for date range</description>
+    </function>
+
+    <function>
+        <name>get_personal_record</name>
+        <params></params>
+        <returns type="Dict[str, Any]">Personal records</returns>
+        <description>Returns user's personal records for various activities</description>
+    </function>
+
+    <function>
+        <name>get_training_status</name>
+        <params>
+            <param name="cdate" type="str">Date in YYYY-MM-DD format</param>
+        </params>
+        <returns type="Dict[str, Any]">Training status data</returns>
+        <description>Returns training status assessment for specified date</description>
+    </function>
+
+    <function>
+        <name>download_activity</name>
+        <params>
+            <param name="activity_id" type="str">Activity identifier</param>
+            <param name="dl_fmt" type="ActivityDownloadFormat">Download format (TCX default)</param>
+        </params>
+        <returns type="bytes">Activity file content</returns>
+        <description>Downloads activity in specified format (Original, TCX, GPX, KML, or CSV)</description>
+    </function>
+</class>
