@@ -5,13 +5,20 @@ from typing import List
 
 
 class JupyterCodeAgentPrompt(BaseModel):
-    SYSTEM_PROMPT: str = f"""
+    FIXED_SYSTEM_PROMPT: str = f"""
 You are a data analysis agent.
 Given the state of the jupyter notebook, and the task, complete the task.
 
 The following is the format of the actions you can take:
 {JupyterCodeActionParser.get_actions_response_template()}
+
+Strategies:
+- Use comments / markdown cells to explain your thought process and reason before implementing.
+- You can use print statements to inspect / understand the data / debug the code.
+- If the data type is a Dict, first use print statements to inspect / understand the keys and values.
+- Check the final answer for task completion before stopping.
 """
+    ADDITIONAL_SYSTEM_PROMPT: str
     NOTEBOOK_STATE_PREAMBLE: str = """
 The following is the current state of the notebook:
 ```
@@ -36,12 +43,17 @@ The following is the task we need to complete:
         )
 
     def forward(
-        self, task: str, notebook_state: List[LlmMessageContentItem]
+        self,
+        task: str,
+        notebook_state: List[LlmMessageContentItem],
     ) -> List[LlmMessage]:
         llm_messages = [
             LlmMessage(
                 role="system",
-                content=[TextItem(type="text", text=self.SYSTEM_PROMPT)],
+                content=[
+                    TextItem(type="text", text=self.FIXED_SYSTEM_PROMPT),
+                    TextItem(type="text", text=self.ADDITIONAL_SYSTEM_PROMPT),
+                ],
             )
         ]
         user_message_content: List[LlmMessageContentItem] = [

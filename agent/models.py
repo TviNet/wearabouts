@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
-from typing import Any, Dict, List, Literal, Tuple, TypeAlias, TypedDict, Union
+from typing import Any, Dict, List, Literal, TypeAlias, TypedDict, Union
 
 
 # models enum
@@ -12,9 +12,13 @@ class LlmModel(Enum):
     GEMINI_1_5_FLASH_8B = "gemini/gemini-1.5-flash-8b"
 
 
+class ImageUrl(TypedDict):
+    url: str
+
+
 class ImageItem(TypedDict):
-    type: Literal["image"]
-    image_url: str
+    type: Literal["image_url"]
+    image_url: ImageUrl
 
 
 class TextItem(TypedDict):
@@ -74,6 +78,3 @@ class DisplayDataOutput(TypedDict):
 class ExecuteResultOutput(TypedDict):
     output_type: str
     data: Dict[str, Any]
-
-
-StateItem: TypeAlias = Tuple[str, str]

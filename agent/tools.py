@@ -1,6 +1,11 @@
 import logging
 
-from agent.models import CellOutputTypes, ContentType, StateItem
+from agent.models import (
+    CellOutputTypes,
+    ImageItem,
+    LlmMessageContentItem,
+    TextItem,
+)
 from nbformat import NotebookNode
 from pydantic import BaseModel
 from sandbox.notebook_sandbox import CellType, JupyterSandbox
@@ -158,35 +163,38 @@ Possible actions:
 
 class JupyterCodeParser:
     @staticmethod
-    def convert_output_to_string(output: Dict[str, Any]) -> StateItem:
+    def convert_output_to_string(output: Dict[str, Any]) -> LlmMessageContentItem:
         if output.get("output_type", "") == CellOutputTypes.STREAM.value:
-            return ContentType.TEXT.value, output.get("text", "")
+            return TextItem(type="text", text=output.get("text", ""))
         elif output.get("output_type", "") == CellOutputTypes.ERROR.value:
-            return (
-                ContentType.TEXT.value,
-                f"""
-{output.get('ename')}: {output.get('evalue')}
-{output.get('traceback')}
+            return TextItem(
+                type="text",
+                text=f"""    
+{output.get("ename")}: {output.get("evalue")}
+{output.get("traceback")}
 """,
             )
         elif output.get("output_type", "") == CellOutputTypes.DISPLAY_DATA.value:
             if output.get("data", {}).get("image/png", None):
                 image_data = output.get("data", {}).get("image/png", None)
-                return ContentType.IMAGE.value, f"data:image/png;base64,{image_data}"
-        return ContentType.TEXT.value, ""
+                return ImageItem(
+                    type="image_url",
+                    image_url={"url": f"data:image/png;base64,{image_data}"},
+                )
+        return TextItem(type="text", text="")
 
     @staticmethod
     def convert_notebook_to_state(
         notebook: NotebookNode, include_outputs=True
-    ) -> List[StateItem]:
-        state: List[StateItem] = []
+    ) -> List[LlmMessageContentItem]:
+        state: List[LlmMessageContentItem] = []
         for _, cell in enumerate(notebook.cells):
             content = cell.source
             if CellType(cell.cell_type) == CellType.MARKDOWN:
-                state.append((ContentType.TEXT.value, content))
+                state.append(TextItem(type="text", text=content))
 
             elif CellType(cell.cell_type) == CellType.CODE:
-                state.append((ContentType.TEXT.value, content))
+                state.append(TextItem(type="text", text=content))
                 if include_outputs:
                     outputs = cell.outputs if hasattr(cell, "outputs") else []
                     output_repr = [
