@@ -32,7 +32,7 @@ def solve_with_garmin_agent(sandbox: JupyterSandbox, task: str):
     llm_client = get_llm_client()
 
     for _ in range(MAX_ITERATIONS):
-        notebook_state = JupyterCodeParser.convert_notebook_to_state(notebook)
+        notebook_state = JupyterCodeParser.render_notebook(notebook)
         llm_prompt = prompt_factory.forward(
             task,
             notebook_state,

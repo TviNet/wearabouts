@@ -7,7 +7,10 @@ from litellm.caching.caching import Cache, LiteLLMCacheType
 from pydantic.dataclasses import dataclass
 from typing import List
 
+litellm.suppress_debug_info = True
 litellm.cache = Cache(type=LiteLLMCacheType.DISK)
+litellm.success_callback = ["langfuse"]
+litellm.failure_callback = ["langfuse"]  # logs errors to langfuse
 
 
 @dataclass

@@ -184,24 +184,49 @@ class JupyterCodeParser:
         return TextItem(type="text", text="")
 
     @staticmethod
-    def convert_notebook_to_state(
+    def render_notebook(
         notebook: NotebookNode, include_outputs=True
     ) -> List[LlmMessageContentItem]:
         state: List[LlmMessageContentItem] = []
-        for _, cell in enumerate(notebook.cells):
+        for idx, cell in enumerate(notebook.cells):
             content = cell.source
             if CellType(cell.cell_type) == CellType.MARKDOWN:
-                state.append(TextItem(type="text", text=content))
+                state.append(
+                    TextItem(
+                        type="text",
+                        text=f"""# <cell {idx}>{content}\n# </cell {idx}>""",
+                    )
+                )
 
             elif CellType(cell.cell_type) == CellType.CODE:
-                state.append(TextItem(type="text", text=content))
+                state.append(
+                    TextItem(
+                        type="text",
+                        text=f"""# <cell {idx}: input>\n{content}\n# </cell {idx}: input>""",
+                    )
+                )
                 if include_outputs:
                     outputs = cell.outputs if hasattr(cell, "outputs") else []
                     output_repr = [
                         JupyterCodeParser.convert_output_to_string(output)
                         for output in outputs
                     ]
-                    state += output_repr
+                    if output_repr:
+                        state += (
+                            [
+                                TextItem(
+                                    type="text",
+                                    text=f"""\n# <cell {idx}: output>\n""",
+                                )
+                            ]
+                            + output_repr
+                            + [
+                                TextItem(
+                                    type="text",
+                                    text=f"""\n# </cell {idx}: output>\n""",
+                                )
+                            ]
+                        )
             else:
                 logger.error(f"Invalid cell type: {cell.cell_type}")
 
@@ -245,5 +270,5 @@ print("Hello, world! 3!")
     )
     import json
 
-    print(json.dumps(JupyterCodeParser.convert_notebook_to_state(notebook), indent=4))
+    print(json.dumps(JupyterCodeParser.render_notebook(notebook), indent=4))
     print(should_stop)
