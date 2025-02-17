@@ -6,6 +6,7 @@ from agent.models import (
     LlmMessageContentItem,
     TextItem,
 )
+from app.constants import MAX_CELL_OUTPUT_LENGTH
 from nbformat import NotebookNode
 from pydantic import BaseModel
 from sandbox.notebook_sandbox import CellType, JupyterSandbox
@@ -194,7 +195,7 @@ class JupyterCodeParser:
                 state.append(
                     TextItem(
                         type="text",
-                        text=f"""# <cell {idx}>{content}\n# </cell {idx}>""",
+                        text=f"""# <cell {idx}>\n{content}\n# </cell {idx}>""",
                     )
                 )
 
@@ -207,10 +208,30 @@ class JupyterCodeParser:
                 )
                 if include_outputs:
                     outputs = cell.outputs if hasattr(cell, "outputs") else []
-                    output_repr = [
-                        JupyterCodeParser.convert_output_to_string(output)
-                        for output in outputs
-                    ]
+                    output_repr = []
+                    total_output_length = 0
+                    for output in outputs:
+                        current_output_repr = (
+                            JupyterCodeParser.convert_output_to_string(output)
+                        )
+                        if current_output_repr["type"] == "text":
+                            # skip empty text outputs
+                            if current_output_repr["text"] == "":
+                                continue
+                            if total_output_length > MAX_CELL_OUTPUT_LENGTH:
+                                continue
+                            if total_output_length + len(
+                                current_output_repr["text"]
+                            ) > (MAX_CELL_OUTPUT_LENGTH):
+                                available_space = (
+                                    MAX_CELL_OUTPUT_LENGTH - total_output_length
+                                )
+                                current_output_repr["text"] = (
+                                    current_output_repr["text"][:available_space]
+                                    + "... (truncated)"
+                                )
+                            total_output_length += len(current_output_repr["text"])
+                        output_repr.append(current_output_repr)
                     if output_repr:
                         state += (
                             [
@@ -229,7 +250,12 @@ class JupyterCodeParser:
                         )
             else:
                 logger.error(f"Invalid cell type: {cell.cell_type}")
-
+        # wrap in python code block
+        state = (
+            [TextItem(type="text", text="```python\n")]
+            + state
+            + [TextItem(type="text", text="```")]
+        )
         return state
 
 
