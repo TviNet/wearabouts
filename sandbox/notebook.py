@@ -82,11 +82,11 @@ class JupyterSandbox:
         ep = ExecutePreprocessor(timeout=self.timeout, kernel_name=self.kernel_name)
         try:
             # Execute the notebook
+            # The input argument *nb* is modified in-place.
             executed_notebook, _ = ep.preprocess(notebook)
             return executed_notebook
-        except Exception as e:
-            print(f"Error executing notebook: {str(e)}")
-            return None
+        except Exception as _:
+            return notebook
 
     def execute_cell(
         self, notebook: nbformat.NotebookNode, cell_index: int

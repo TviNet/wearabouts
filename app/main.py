@@ -8,7 +8,7 @@ from agent.prompts import JupyterCodeAgentPrompt
 from agent.tools import JupyterCodeActionParser, JupyterCodeParser
 from constants import ARTIFACT_DIR, GARMIN_API_GUIDE_PATH, MAX_ITERATIONS
 from datetime import datetime
-from sandbox.notebook_sandbox import CellType, JupyterSandbox
+from sandbox.notebook import CellType, JupyterSandbox
 
 logger = logging.getLogger(__name__)
 

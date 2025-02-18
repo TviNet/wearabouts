@@ -9,7 +9,7 @@ from agent.models import (
 from app.constants import MAX_CELL_OUTPUT_LENGTH
 from nbformat import NotebookNode
 from pydantic import BaseModel
-from sandbox.notebook_sandbox import CellType, JupyterSandbox
+from sandbox.notebook import CellType, JupyterSandbox
 from typing import Any, ClassVar, Dict, List, Tuple
 from utils.parsing import (
     extract_block_from_tags,

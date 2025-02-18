@@ -22,7 +22,7 @@ Support:
 - [x] observability with text
 - [ ] observability with images
 - [x] handling long text outputs in jupyter cells
-- [ ] handling errors in executing notebook
+- [x] handling errors in executing notebook
 - [ ] saving traces
 - [ ] profiling speed of solver
 - [ ] dataset of tasks for evaluation
