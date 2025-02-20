@@ -8,12 +8,13 @@
 ## Usage:
 
 ```
-source .env
+> source .env
+> PYTHONPATH=./ python app/main.py --task "Plot my sleep times for last week"
 ```
 
-```
-PYTHONPATH=./ python app/main.py --task "Plot my sleep times and steps daily for last week in the same plot"
-```
+An executed ipynb notebook will be created in the artifacts directory with the desired task completed.
+
+![Generated plot](example.png)
 
 ## Dev guide
 
@@ -34,6 +35,7 @@ PYTHONPATH=./ python app/main.py --task "Plot my sleep times and steps daily for
 - [x] handling long text outputs in jupyter cells
 - [x] handling errors in executing notebook
 - [ ] partial execution of notebook to avoid repeated login
+- [ ] verify output loop
 - [ ] saving traces
 - [ ] profiling speed of solver
 - [ ] dataset of tasks for evaluation
