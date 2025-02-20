@@ -39,7 +39,7 @@
         <params>
             <param name="cdate" type="str">Date in YYYY-MM-DD format</param>
         </params>
-        <returns type="Dict[str, Any]">Steps data</returns>
+        <returns type="List[Dict[str, Any]]">Steps data</returns>
         <description>Returns step count data for specified date</description>
     </function>
 
@@ -48,7 +48,7 @@
         <params>
             <param name="cdate" type="str">Date in YYYY-MM-DD format</param>
         </params>
-        <returns type="Dict[str, Any]">Heart rate data</returns>
+        <returns type="List[Dict[str, Any]]">Heart rate data</returns>
         <description>Returns heart rate data for specified date</description>
     </function>
 
@@ -58,7 +58,7 @@
             <param name="startdate" type="str">Start date in YYYY-MM-DD format</param>
             <param name="enddate" type="Optional[str]">Optional end date in YYYY-MM-DD format</param>
         </params>
-        <returns type="Dict[str, Any]">Body composition metrics</returns>
+        <returns type="List[Dict[str, Any]]">Body composition metrics</returns>
         <description>Returns body composition data for date range (single day if no enddate)</description>
     </function>
 

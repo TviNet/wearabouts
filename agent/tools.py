@@ -220,9 +220,13 @@ class JupyterCodeParser:
                                 continue
                             if total_output_length > MAX_CELL_OUTPUT_LENGTH:
                                 continue
-                            if total_output_length + len(
-                                current_output_repr["text"]
-                            ) > (MAX_CELL_OUTPUT_LENGTH):
+                            if (
+                                total_output_length + len(current_output_repr["text"])
+                                > (MAX_CELL_OUTPUT_LENGTH)
+                                # make sure to print error outputs
+                                and not output.get("output_type", "")
+                                == CellOutputTypes.ERROR.value
+                            ):
                                 available_space = (
                                     MAX_CELL_OUTPUT_LENGTH - total_output_length
                                 )

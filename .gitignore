@@ -5,7 +5,7 @@ __pycache__/
 
 .env
 
-logs/
+artifacts/
 
 .mypy_cache/
 .ruff_cache/
