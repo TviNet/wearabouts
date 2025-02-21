@@ -9,12 +9,13 @@
 
 ```
 > source .env
-> PYTHONPATH=./ python app/main.py --task "Plot my sleep times for last week"
+> PYTHONPATH=./ python app/main.py --task "Plot my sleep times and steps daily for last week in the same plot"
 ```
 
 An executed ipynb notebook will be created in the artifacts directory with the desired task completed.
 
-![Generated plot](example.png)
+![Steps and sleep correlation](example2.png)
+[Walk more -> better sleep]
 
 ## Dev guide
 

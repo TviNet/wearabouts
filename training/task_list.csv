@@ -1,0 +1,3 @@
+task, solved?, notes
+Plot my sleep times and steps daily for last week in the same plot, yes, correctly inferred timestamps
+Plot my sleep times for last week, yes, correctly inferred duration
