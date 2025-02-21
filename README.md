@@ -34,9 +34,10 @@ An executed ipynb notebook will be created in the artifacts directory with the d
 - [ ] observability with images
 - [x] handling long text outputs in jupyter cells
 - [x] handling errors in executing notebook
-- [ ] partial execution of notebook to avoid repeated login
+- [x] partial execution of notebook to avoid repeated login
 - [ ] verify output loop
 - [ ] saving traces
 - [ ] profiling speed of solver
 - [ ] dataset of tasks for evaluation
 - [ ] shorter cell outputs
+- [ ] handle case where login fails

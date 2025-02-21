@@ -29,6 +29,7 @@ class AddCellAction(BaseModel):
     @staticmethod
     def get_response_template() -> str:
         return f"""
+```tool
 <{AddCellAction.name}>
 <{AddCellAction.type}>Cell type i.e. either `code` or `markdown`. Type: enum</{AddCellAction.type}>
 <{AddCellAction.idx}>Cell index i.e. the index of the cell to add to. Type: int</{AddCellAction.idx}>
@@ -36,6 +37,7 @@ class AddCellAction(BaseModel):
 Cell content i.e. the content of the cell to add. Type: str
 </{AddCellAction.content}>
 </{AddCellAction.name}>
+```
 """
 
     @staticmethod
@@ -65,6 +67,7 @@ class ModifyCellAction(BaseModel):
     @staticmethod
     def get_response_template() -> str:
         return f"""
+```tool
 <{ModifyCellAction.name}>
 <{ModifyCellAction.type}>Cell type i.e. either `code` or `markdown`. Type: enum</{ModifyCellAction.type}>
 <{ModifyCellAction.idx}>Cell index i.e. the index of the cell to modify. Type: int</{ModifyCellAction.idx}>
@@ -72,6 +75,7 @@ class ModifyCellAction(BaseModel):
 Cell content i.e. the content of the cell to modify. Type: str
 </{ModifyCellAction.content}>
 </{ModifyCellAction.name}>
+```
 """
 
     @staticmethod
@@ -98,9 +102,11 @@ class DeleteCellAction(BaseModel):
     @staticmethod
     def get_response_template() -> str:
         return f"""
+```tool
 <{DeleteCellAction.name}>
 <{DeleteCellAction.idx}>Cell index i.e. the index of the cell to delete. Type: int</{DeleteCellAction.idx}>
 </{DeleteCellAction.name}>
+```
 """
 
     @staticmethod
@@ -123,8 +129,10 @@ class StopAction(BaseModel):
     @staticmethod
     def get_response_template() -> str:
         return f"""
+```tool
 <{StopAction.name}>
 </{StopAction.name}>
+```
 """
 
     @staticmethod

@@ -45,6 +45,13 @@ api.login()
 """,
         cell_type=CellType.CODE,
     )
+    # Execute once to login
+    notebook = sandbox.execute_notebook(notebook)
+    if notebook.cells[1].outputs[0]["output_type"] == "error":
+        raise Exception("Login failed. Try again in a few minutes.")
+    # assuming this worked
+    # Skip the login cell for the next iterations
+    notebook = sandbox.skip_cell_execution(notebook, 1)
     return notebook
 
 
@@ -58,26 +65,30 @@ def solve_with_garmin_agent(
     notebook = init_notebook(sandbox, task)
     state_trajectory = []
 
-    for idx in range(MAX_ITERATIONS):
-        logger.info(f"[{session_id}]: Solver iteration {idx} ...")
+    try:
+        for idx in range(MAX_ITERATIONS):
+            logger.info(f"[{session_id}]: Solver iteration {idx} ...")
+            notebook = sandbox.execute_notebook(notebook)
+            state_trajectory.append(copy.deepcopy(notebook))
+            notebook_state = JupyterCodeParser.render_notebook(notebook)
+            llm_prompt = prompt_factory.forward(
+                task,
+                notebook_state,
+            )
+            actions = llm_client.get_single_answer(llm_prompt)
+            updated_notebook, should_stop = JupyterCodeActionParser.response_to_actions(
+                actions, sandbox=sandbox, notebook=notebook
+            )
+            notebook = updated_notebook
+            if should_stop:
+                break
+
         notebook = sandbox.execute_notebook(notebook)
         state_trajectory.append(copy.deepcopy(notebook))
-        notebook_state = JupyterCodeParser.render_notebook(notebook)
-        llm_prompt = prompt_factory.forward(
-            task,
-            notebook_state,
-        )
-        actions = llm_client.get_single_answer(llm_prompt)
-        updated_notebook, should_stop = JupyterCodeActionParser.response_to_actions(
-            actions, sandbox=sandbox, notebook=notebook
-        )
-        notebook = updated_notebook
-        if should_stop:
-            break
-
-    notebook = sandbox.execute_notebook(notebook)
-    state_trajectory.append(copy.deepcopy(notebook))
-    return notebook, state_trajectory
+    except Exception as e:
+        logger.error(f"Error solving task {task} with garmin agent: {e}")
+    finally:
+        return notebook, state_trajectory
 
 
 def solve(task: str):

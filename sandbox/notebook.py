@@ -2,6 +2,7 @@ import logging
 import nbformat
 
 from enum import Enum
+from jupyter_client import KernelManager
 from nbconvert.preprocessors import ExecutePreprocessor
 from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
 from typing import Any, Dict
@@ -18,14 +19,55 @@ class CellType(Enum):
         return cls.CODE
 
 
+class SkipCellExecutePreprocessor(ExecutePreprocessor):
+    """
+    https://stackoverflow.com/a/38064506
+    """
+
+    def preprocess_cell(self, cell, resources, cell_index):
+        """
+        Executes a single code cell. See base.py for details.
+        To execute all cells see :meth:`preprocess`.
+
+        Checks cell.metadata for 'execute' key. If set, and maps to False,
+          the cell is not executed.
+        """
+
+        if not cell.metadata.get("execute", True):
+            # Don't execute this cell in output
+            return cell, resources
+
+        return super().preprocess_cell(cell, resources, cell_index)
+
+
 class JupyterSandbox:
     def __init__(self, kernel_name="python3"):
         self.kernel_name = kernel_name
         self.timeout = 600  # timeout in seconds
-        self._executor = ExecutePreprocessor(
-            timeout=self.timeout, kernel_name=self.kernel_name
+
+        # Initialize kernel manager
+        self._kernel_manager = KernelManager(kernel_name=self.kernel_name)
+        self._kernel_manager.start_kernel()
+        self._kernel_client = self._kernel_manager.client()
+        self._kernel_client.start_channels()
+
+        self._executor = SkipCellExecutePreprocessor(
+            timeout=self.timeout,
+            kernel_name=self.kernel_name,
+            kernel_manager=self._kernel_manager,
         )
-        self._executor.allow_errors = True
+        self._executor.allow_errors = False
+
+    def shutdown(self):
+        """Properly shutdown the kernel"""
+        if self._kernel_client:
+            self._kernel_client.stop_channels()
+        if self._kernel_manager:
+            self._kernel_manager.shutdown_kernel()
+
+    def __del__(self):
+        """Ensure kernel is shutdown when object is deleted"""
+        self.shutdown()
 
     def create_notebook(self) -> nbformat.NotebookNode:
         """Create a new empty notebook"""
@@ -67,6 +109,14 @@ class JupyterSandbox:
         notebook.cells.pop(idx)
         return notebook
 
+    def skip_cell_execution(
+        self, notebook: nbformat.NotebookNode, idx: int
+    ) -> nbformat.NotebookNode:
+        if idx < 0 or idx >= len(notebook.cells):
+            raise ValueError(f"Invalid cell index: {idx}")
+        notebook.cells[idx].metadata["execute"] = False
+        return notebook
+
     def save_notebook(self, notebook: nbformat.NotebookNode, filepath: str):
         """Save the notebook to a file"""
         with open(filepath, "w", encoding="utf-8") as f:
@@ -79,11 +129,12 @@ class JupyterSandbox:
 
     def execute_notebook(self, notebook: nbformat.NotebookNode):
         """Execute all cells in the notebook"""
-        ep = ExecutePreprocessor(timeout=self.timeout, kernel_name=self.kernel_name)
         try:
             # Execute the notebook
             # The input argument *nb* is modified in-place.
-            executed_notebook, _ = ep.preprocess(notebook)
+            executed_notebook, _ = self._executor.preprocess(
+                notebook, km=self._kernel_manager
+            )
             return executed_notebook
         except Exception as _:
             return notebook
@@ -141,6 +192,15 @@ import numpy as np
 """,
         CellType.CODE,
     )
+    sandbox.add_cell(
+        nb,
+        """
+# skipped cell
+print("This should not be printed")
+""",
+        CellType.CODE,
+    )
+    sandbox.skip_cell_execution(nb, 2)
     # Add a simple code cell
     sandbox.add_cell(
         nb,

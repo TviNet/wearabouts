@@ -1,11 +1,11 @@
 Step 1:
     Prompt:
-        convert this codebase into xml formatted function definitions containing useful info
+        "convert this codebase into xml formatted function definitions containing useful info
 
         example
 
         func1 (a: int, b:str) -> c
-        # concatenates string versions of a and b and returns c
+        # concatenates string versions of a and b and returns c"
 
         [Input]: garminconnect.py
     Model:
