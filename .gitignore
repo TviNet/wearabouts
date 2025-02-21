@@ -6,6 +6,7 @@ __pycache__/
 .env
 
 artifacts/
+secrets/
 
 .mypy_cache/
 .ruff_cache/

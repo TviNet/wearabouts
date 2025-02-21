@@ -1,5 +1,6 @@
 import logging
 import nbformat
+import time
 
 from enum import Enum
 from jupyter_client import KernelManager
@@ -58,16 +59,33 @@ class JupyterSandbox:
         )
         self._executor.allow_errors = False
 
+    def __enter__(self):
+        """Support for context manager protocol"""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Cleanup when exiting context manager"""
+        self.shutdown()
+        return False  # Don't suppress any exceptions
+
     def shutdown(self):
         """Properly shutdown the kernel"""
         if self._kernel_client:
             self._kernel_client.stop_channels()
+            # Add a small delay to allow channels to close
+            time.sleep(0.5)
+            self._kernel_client = None
         if self._kernel_manager:
-            self._kernel_manager.shutdown_kernel()
+            self._kernel_manager.shutdown_kernel(now=True)
+            self._kernel_manager = None
 
     def __del__(self):
         """Ensure kernel is shutdown when object is deleted"""
-        self.shutdown()
+        try:
+            self.shutdown()
+        except Exception as e:
+            # Avoid raising exceptions during garbage collection
+            logger.warning(f"Error during kernel shutdown: {e}")
 
     def create_notebook(self) -> nbformat.NotebookNode:
         """Create a new empty notebook"""
