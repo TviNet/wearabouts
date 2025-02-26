@@ -32,13 +32,13 @@ An executed ipynb notebook will be created in the artifacts directory with the d
 ## TODOs
 
 - [x] observability with text
-- [ ] observability with images
 - [x] handling long text outputs in jupyter cells
 - [x] handling errors in executing notebook
 - [x] partial execution of notebook to avoid repeated login
+- [x] shorter cell outputs
 - [ ] verify output loop
+- [ ] observability with images
 - [ ] saving traces
 - [ ] profiling speed of solver
 - [ ] dataset of tasks for evaluation
-- [ ] shorter cell outputs
 - [ ] handle case where login fails

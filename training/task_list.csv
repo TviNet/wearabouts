@@ -1,3 +1,4 @@
 task, solved?, notes
 Plot my sleep times and steps daily for last week in the same plot, yes, correctly inferred timestamps
 Plot my sleep times for last week, yes, correctly inferred duration
+Plot my bicep curl reps from my the last 30 times I did them, partially solved, incorrect number of times (only considered 30 activities); took 15 iterations; multiple sets in a day ambiguity; 

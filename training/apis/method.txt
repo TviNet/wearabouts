@@ -13,3 +13,10 @@ Step 1:
 
 Step 2:
     Wrap in class tag
+
+Step 3:
+    Delete upload functions 
+
+Step 4:
+    Add new function missed in the original output (get_activity_exercise_sets)
+    Add notes to the function on confusing json fields (exerciseSets, exercises being a list despite being a single exercise)

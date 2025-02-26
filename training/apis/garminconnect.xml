@@ -63,27 +63,6 @@
     </function>
 
     <function>
-        <name>add_body_composition</name>
-        <params>
-            <param name="timestamp" type="Optional[str]">Timestamp for measurement</param>
-            <param name="weight" type="float">Weight value</param>
-            <param name="percent_fat" type="Optional[float]">Body fat percentage</param>
-            <param name="percent_hydration" type="Optional[float]">Hydration percentage</param>
-            <param name="visceral_fat_mass" type="Optional[float]">Visceral fat mass</param>
-            <param name="bone_mass" type="Optional[float]">Bone mass</param>
-            <param name="muscle_mass" type="Optional[float]">Muscle mass</param>
-            <param name="basal_met" type="Optional[float]">Basal metabolic rate</param>
-            <param name="active_met" type="Optional[float]">Active metabolic rate</param>
-            <param name="physique_rating" type="Optional[float]">Physique rating</param>
-            <param name="metabolic_age" type="Optional[float]">Metabolic age</param>
-            <param name="visceral_fat_rating" type="Optional[float]">Visceral fat rating</param>
-            <param name="bmi" type="Optional[float]">Body Mass Index</param>
-        </params>
-        <returns type="Dict">Response from Garmin API</returns>
-        <description>Uploads body composition measurement data to Garmin Connect</description>
-    </function>
-
-    <function>
         <name>get_sleep_data</name>
         <params>
             <param name="cdate" type="str">Date in YYYY-MM-DD format</param>
@@ -110,16 +89,20 @@
             <param name="maxpoly" type="int">Max polyline size (default 4000)</param>
         </params>
         <returns type="Dict[str, Any]">Detailed activity data</returns>
-        <description>Returns comprehensive data for a specific activity including GPS tracks, heart rate, etc</description>
+        <description>Returns comprehensive data metrics for a specific activity including GPS tracks, heart rate, etc</description>
     </function>
 
     <function>
-        <name>upload_activity</name>
+        <name>get_activity_exercise_sets</name>
         <params>
-            <param name="activity_path" type="str">Path to activity file</param>
+            <param name="activity_id" type="str">Activity identifier</param>
         </params>
-        <returns type="Dict">Upload response</returns>
-        <description>Uploads an activity file (FIT, GPX, or TCX format) to Garmin Connect</description>
+        <returns type="Dict[str, Any]">Exercise sets</returns>
+        <description>Returns exercise sets and summary metrics for a specific activity</description>
+        <notes>
+        Despite the name and the field "exercises" being a list, each exercise set is just one exercise.
+        The fields of exercise sets are therefore only for one exercise.
+        </notes>
     </function>
 
     <function>
