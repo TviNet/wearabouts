@@ -2,8 +2,8 @@
 
 ## Support:
 
-- Garmin (In-progress)
-- TODO
+-   Garmin (In-progress)
+-   TODO
 
 ## Usage:
 
@@ -13,32 +13,30 @@
 ```
 
 An executed ipynb notebook will be created in the artifacts directory with the desired task completed.
-
-![Steps and sleep correlation](example2.png)
-[Walk more -> better sleep]
+Examples of the output are in the `examples` directory.
 
 ## Dev guide
 
 ### ENV
 
-- Set all required env vars in .env
-- `source .env && python app/main.py`
+-   Set all required env vars in .env
+-   `source .env && python app/main.py`
 
 ### Langfuse
 
-- Clone and run server: https://langfuse.com/self-hosting/local
-- Set up API keys via UI
+-   Clone and run server: https://langfuse.com/self-hosting/local
+-   Set up API keys via UI
 
 ## TODOs
 
-- [x] observability with text
-- [x] handling long text outputs in jupyter cells
-- [x] handling errors in executing notebook
-- [x] partial execution of notebook to avoid repeated login
-- [x] shorter cell outputs
-- [ ] verify output loop
-- [ ] observability with images
-- [ ] saving traces
-- [ ] profiling speed of solver
-- [ ] dataset of tasks for evaluation
-- [ ] handle case where login fails
+-   [x] observability with text
+-   [x] handling long text outputs in jupyter cells
+-   [x] handling errors in executing notebook
+-   [x] partial execution of notebook to avoid repeated login
+-   [x] shorter cell outputs
+-   [ ] verify output loop
+-   [ ] observability with images
+-   [ ] saving traces
+-   [ ] profiling speed of solver
+-   [ ] dataset of tasks for evaluation
+-   [ ] handle case where login fails
