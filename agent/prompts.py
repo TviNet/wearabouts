@@ -1,11 +1,17 @@
 from agent.models import LlmMessage, LlmMessageContentItem, TextItem
-from agent.tools import JupyterCodeActionParser
+from agent.tools import JupyterCodeActionParser, JupyterCritiqueActionsParser
+from enum import Enum
 from pydantic import BaseModel
 from typing import List
 
 
+class Character(Enum):
+    GENERATE_CODE = "generate_code"
+    CRITIQUE_CODE = "critique_code"
+
+
 class JupyterCodeAgentPrompt(BaseModel):
-    FIXED_SYSTEM_PROMPT: str = f"""
+    GENERATE_CODE_SYSTEM_PROMPT: str = f"""
 Background:
     - You are a data analysis agent.
     - You are given a jupyter notebook and a task.
@@ -32,6 +38,23 @@ Strategies for generating actions:
     - You can use print statements to inspect / understand the data / debug the code.
     - If the data type is a Dict, or List, first use print statements to inspect / understand the keys and values.
     - Check the final answer for task completion before stopping.
+"""
+    CRITIQUE_CODE_SYSTEM_PROMPT: str = f"""
+Background:
+    - You are a data analysis agent.
+    - You are given a jupyter notebook and a task.
+    - A jupyter notebook is a stateful collection of cells which are executed in order.
+
+Goal:
+    - Given the state of the jupyter notebook, and the task, you need to critique the notebook for correctness with respect to the task.
+    - The following are the actions you can take, strictly follow the format:
+{JupyterCritiqueActionsParser.get_actions_response_template()}
+
+Strategies for generating actions:
+    - If the notebook accurately solves the task, use the "Stop" action.
+    - If the notebook does not accurately solve the task, use the "Provide feedback" action.
+    - In your feedback, be specific and provide details about the plots, tables, outputs, etc.
+    - This feedback will be used in addition to the task to improve the notebook.
 """
     ADDITIONAL_SYSTEM_PROMPT: str
     NOTEBOOK_STATE_PREAMBLE: str = """
@@ -61,12 +84,20 @@ The following is the task we need to complete:
         self,
         task: str,
         notebook_state: List[LlmMessageContentItem],
+        character: Character = Character.GENERATE_CODE,
     ) -> List[LlmMessage]:
         llm_messages = [
             LlmMessage(
                 role="system",
                 content=[
-                    TextItem(type="text", text=self.FIXED_SYSTEM_PROMPT),
+                    TextItem(
+                        type="text",
+                        text=(
+                            self.GENERATE_CODE_SYSTEM_PROMPT
+                            if character == Character.GENERATE_CODE
+                            else self.CRITIQUE_CODE_SYSTEM_PROMPT
+                        ),
+                    ),
                     TextItem(type="text", text=self.ADDITIONAL_SYSTEM_PROMPT),
                 ],
             )

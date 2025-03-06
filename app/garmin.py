@@ -4,16 +4,21 @@ import nbformat
 import os
 import requests
 
-from agent.llm import get_llm_client
-from agent.prompts import JupyterCodeAgentPrompt
-from agent.tools import JupyterCodeActionParser, JupyterCodeParser
-from constants import GARMIN_API_GUIDE_PATH, MAX_ITERATIONS
+from agent.llm import LlmClient, get_llm_client
+from agent.prompts import Character, JupyterCodeAgentPrompt
+from agent.tools import (
+    JupyterCodeActionParser,
+    JupyterCodeParser,
+    JupyterCritiqueActionsParser,
+)
+from constants import GARMIN_API_GUIDE_PATH, MAX_GOAL_ITERATIONS, MAX_ITERATIONS
 from garminconnect import (
     Garmin,
     GarminConnectAuthenticationError,
 )
 from garth.exc import GarthHTTPError
 from sandbox.notebook import CellType, JupyterSandbox
+from typing import List
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -124,6 +129,38 @@ api.login(tokenstore)
     return notebook
 
 
+def current_attempt_towards_goal(
+    task: str,
+    notebook: nbformat.NotebookNode,
+    sandbox: JupyterSandbox,
+    prompt_factory: JupyterCodeAgentPrompt,
+    llm_client: LlmClient,
+    session_id: str,
+    state_trajectory: List[nbformat.NotebookNode],
+    goal_idx: int,
+) -> nbformat.NotebookNode:
+    for idx in range(MAX_ITERATIONS):
+        logger.info(
+            f"[{session_id}]: Goal iteration {goal_idx} - Solver iteration {idx} ..."
+        )
+        notebook = sandbox.execute_notebook(notebook)
+        state_trajectory.append(copy.deepcopy(notebook))
+        notebook_state = JupyterCodeParser.render_notebook(notebook)
+        llm_prompt = prompt_factory.forward(
+            task,
+            notebook_state,
+            character=Character.GENERATE_CODE,
+        )
+        actions = llm_client.get_single_answer(llm_prompt)
+        updated_notebook, should_stop = JupyterCodeActionParser.response_to_actions(
+            actions, sandbox=sandbox, notebook=notebook
+        )
+        notebook = updated_notebook
+        if should_stop:
+            break
+    return notebook
+
+
 def solve_with_garmin_agent(
     sandbox: JupyterSandbox, task: str, unique_task_id: str
 ) -> nbformat.NotebookNode:
@@ -136,25 +173,34 @@ def solve_with_garmin_agent(
     state_trajectory = []
 
     try:
-        for idx in range(MAX_ITERATIONS):
-            logger.info(f"[{session_id}]: Solver iteration {idx} ...")
-            notebook = sandbox.execute_notebook(notebook)
-            state_trajectory.append(copy.deepcopy(notebook))
+        goal = task
+        for goal_idx in range(MAX_GOAL_ITERATIONS):
+            notebook = current_attempt_towards_goal(
+                goal,
+                notebook,
+                sandbox,
+                prompt_factory,
+                llm_client,
+                session_id,
+                state_trajectory,
+                goal_idx,
+            )
             notebook_state = JupyterCodeParser.render_notebook(notebook)
             llm_prompt = prompt_factory.forward(
                 task,
                 notebook_state,
+                character=Character.CRITIQUE_CODE,
             )
             actions = llm_client.get_single_answer(llm_prompt)
-            updated_notebook, should_stop = JupyterCodeActionParser.response_to_actions(
-                actions, sandbox=sandbox, notebook=notebook
+            feedback, should_stop = JupyterCritiqueActionsParser.response_to_actions(
+                actions
             )
-            notebook = updated_notebook
             if should_stop:
                 break
-
-        notebook = sandbox.execute_notebook(notebook)
-        state_trajectory.append(copy.deepcopy(notebook))
+            logger.info(
+                f"[{session_id}]: Updating task with new goal - Feedback: {feedback}"
+            )
+            goal = task + f"\n(feedback: {feedback})\n"
     except Exception as e:
         logger.error(f"Error solving task {task} with garmin agent: {e}")
     finally:

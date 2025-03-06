@@ -20,6 +20,46 @@ from utils.parsing import (
 logger = logging.getLogger(__name__)
 
 
+class ProvideFeedbackAction(BaseModel):
+    name: ClassVar[str] = "feedback"
+
+    @staticmethod
+    def get_response_template() -> str:
+        return f"""
+```tool
+<{ProvideFeedbackAction.name}>
+Feedback i.e. the feedback to provide. Type: str
+</{ProvideFeedbackAction.name}>
+```
+"""
+
+    @staticmethod
+    def handle_provide_feedback_action(response: str) -> str:
+        feedback_entries = extract_blocks_from_tags(
+            response, ProvideFeedbackAction.name
+        )
+        feedback = "".join(feedback_entries)
+        return feedback
+
+
+class JupyterCritiqueActionsParser:
+    @staticmethod
+    def get_actions_response_template() -> str:
+        return f"""
+Possible actions:
+1. Stop
+{StopAction.get_response_template()}
+2. Provide feedback
+{ProvideFeedbackAction.get_response_template()}
+"""
+
+    @staticmethod
+    def response_to_actions(response: str) -> Tuple[bool, str]:
+        stop = StopAction.handle_stop_action(response)
+        feedback = ProvideFeedbackAction.handle_provide_feedback_action(response)
+        return stop, feedback
+
+
 class AddCellAction(BaseModel):
     name: ClassVar[str] = "add_cell"
     type: ClassVar[str] = "type"
