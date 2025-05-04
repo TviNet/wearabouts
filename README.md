@@ -35,6 +35,8 @@ Examples of the output are in the `examples` directory.
 -   [x] partial execution of notebook to avoid repeated login
 -   [x] shorter cell outputs
 -   [x] verify output loop
+-   [x] allow feedback and start from previous state
+-   [ ] save solver state gracefully
 -   [ ] support local llm
 -   [ ] observability with images
 -   [ ] saving traces

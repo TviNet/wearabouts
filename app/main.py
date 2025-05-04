@@ -1,9 +1,7 @@
 import argparse
 import logging
-import os
 
-from app.garmin import solve_with_garmin_agent
-from constants import ARTIFACT_DIR
+from app.garmin import GarminSolver
 from datetime import datetime
 from sandbox.notebook import JupyterSandbox
 
@@ -14,33 +12,24 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def solve(task: str):
+def solve(task: str, task_id: str, feedback: str):
     # timestamp
-    unique_task_id = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-    # create a new notebook
+    unique_task_id = task_id or str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+
     with JupyterSandbox() as sandbox:
         logger.info(f"Solving task {task} with garmin agent")
-        answer, state_trajectory = solve_with_garmin_agent(
-            sandbox, task, unique_task_id
-        )
-
-        save_dir = os.path.join(ARTIFACT_DIR, unique_task_id)
-        os.makedirs(save_dir, exist_ok=True)
-        save_path = os.path.join(save_dir, "answer.ipynb")
-        logger.info(f"Saving notebook to {save_path}")
-        sandbox.save_notebook(answer, save_path)
-
-        traj_save_path = os.path.join(save_dir, "state_trajectory")
-        os.makedirs(traj_save_path, exist_ok=True)
-        for idx, state in enumerate(state_trajectory):
-            sandbox.save_notebook(state, os.path.join(traj_save_path, f"{idx}.ipynb"))
+        solver = GarminSolver(task=task, task_id=unique_task_id, feedback=feedback)
+        solver.init_solver()
+        solver.solve(sandbox)
 
 
 if __name__ == "__main__":
     # args
     parser = argparse.ArgumentParser()
     parser.add_argument("--task", type=str, required=True)
+    parser.add_argument("--task-id", type=str, required=False)
+    parser.add_argument("--feedback", type=str, required=False)
     args = parser.parse_args()
-    solve(args.task)
+    solve(args.task, args.task_id, args.feedback or "")
 
     # solve("Plot my sleep times for last week")
