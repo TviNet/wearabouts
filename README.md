@@ -2,8 +2,7 @@
 
 ## Support:
 
--   Garmin (In-progress)
--   TODO
+-   Garmin
 
 ## Usage:
 
